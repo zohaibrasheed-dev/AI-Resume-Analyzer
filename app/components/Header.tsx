@@ -6,7 +6,6 @@ const Header = () => {
     <nav className="navbar">
         <Link to="/" className="text-2xl font-bold text-gradient"><span>RESUMIND</span></Link>
         <Link to="/upload" className="primary-button w-fit">Upload Resume</Link>
-
     </nav>
   )
 }
