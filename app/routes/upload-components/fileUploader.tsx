@@ -1,7 +1,11 @@
 import { useRef } from "react";
-import infoIcon from "/public/icons/info.svg";
+import infoIcon from "/icons/info.svg";
 
-const FileUploader = () => {
+interface ParentPropsFnc {
+    fileReceiveFnc: (selectedFile: File) => void;
+}
+
+const FileUploader = ({fileReceiveFnc} : ParentPropsFnc) => {
 
     // Grab Input-file Element
     const inputFileRef = useRef<HTMLInputElement>(null);
@@ -14,7 +18,11 @@ const FileUploader = () => {
     // File Uploading
     const fileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
-        console.log("File is uploaded", selectedFile);
+
+        // When File Uploaded, Push it to parent
+        if(selectedFile) {
+            fileReceiveFnc(selectedFile);
+        }
     }
 
     return (
