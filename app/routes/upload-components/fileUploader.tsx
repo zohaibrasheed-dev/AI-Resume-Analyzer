@@ -5,7 +5,7 @@ interface ParentPropsFnc {
     fileReceiveFnc: (selectedFile: File) => void;
 }
 
-const FileUploader = ({fileReceiveFnc} : ParentPropsFnc) => {
+const FileUploader = ({ fileReceiveFnc }: ParentPropsFnc) => {
 
     // Grab Input-file Element
     const inputFileRef = useRef<HTMLInputElement>(null);
@@ -20,13 +20,13 @@ const FileUploader = ({fileReceiveFnc} : ParentPropsFnc) => {
         const selectedFile = e.target.files?.[0];
 
         // When File Uploaded, Push it to parent
-        if(selectedFile) {
+        if (selectedFile) {
             fileReceiveFnc(selectedFile);
         }
     }
 
     return (
-        <>
+        <div className="relative w-full">
             <div className="inset-shadow w-full p-3 rounded-3xl" onClick={showUploader}>
                 <div className="custom-uploader flex flex-col items-center w-full bg-white p-12 rounded-2xl cursor-pointer">
                     <img src={infoIcon} alt="info-icon" className="w-[60px]" />
@@ -37,8 +37,8 @@ const FileUploader = ({fileReceiveFnc} : ParentPropsFnc) => {
                     <span className="text-gray-500 text-sm">PDF, PNG or JPG (max. 10MB)</span>
                 </div>
             </div>
-            <input type="file" onChange={fileUpload} accept=".pdf" className="hidden" ref={inputFileRef} id="file-input" />
-        </>
+            <input type="file" onChange={fileUpload} accept=".pdf" name="resume-file" className="sr-only" ref={inputFileRef} id="file-input" />
+        </div>
     )
 }
 
