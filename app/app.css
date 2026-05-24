@@ -133,7 +133,7 @@ form {
 
 
 
-/* .loader-wrapper {
+.loader-wrapper {
   @apply flex flex-col items-center justify-center gap-6;
   @apply [&>img]:w-[300px];
 }
@@ -151,4 +151,4 @@ form {
   100% {
     opacity: 0;
   }
-} */
+}

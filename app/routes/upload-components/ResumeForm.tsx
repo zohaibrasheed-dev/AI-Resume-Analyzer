@@ -8,7 +8,9 @@ const ResumeForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [processingStatus, setProcessingStatus] = useState<string>('');
+  const [isCompleted, setisCompleted] = useState<boolean>(false);
 
   const fileReceived = (selectedFile: File) => {
     setFile(selectedFile);
@@ -40,13 +42,27 @@ const ResumeForm = () => {
     const resumeFile = file as File;
 
     try {
+      // As Soon as we try, let's tell the user that we are uploading the data
+      setProcessingStatus("Uploading Your Data To Cloud...");
+      setIsProcessing(true);
+      
+      // Waiting For Response To Success
       const puterCloudData = await puter.fs.upload(file);
+      
+      // If Response Is Success
       if (puterCloudData) {
-        console.log("Files Upload Success");
-        console.log("Here is what we get", puterCloudData);
+        setIsProcessing(false);
+        setisCompleted(true);
+        setProcessingStatus("Successfully Uploaded!");
       }
-    } catch (error) {
-      console.log("Something Went Wrong!", error);
+
+    } 
+    catch (error) {
+      setIsProcessing(false);
+      setProcessingStatus("Something went wrong");
+    }
+    finally {
+      setIsProcessing(false);
     }
 
   }
@@ -54,15 +70,16 @@ const ResumeForm = () => {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="uploader-form mt-20">
-
         {
-          isUploading ? (
-            isUploading && (
-              <div className="loader-wrapper">
-                <span className="text-2xl text-gray-700 blink">Uploading.... Please wait</span>
-                <img src={spinner} alt="spinner-gif" />
-              </div>
-            )
+          isProcessing ? (
+            <div className="loader-wrapper">
+              <span className="text-2xl text-gray-700 blink">{processingStatus}</span>
+              <img src={spinner} alt="spinner-gif" />
+            </div>
+          ) : isCompleted ? (
+            <div className="loader-wrapper">
+              <span className="text-2xl text-gray-700 blink">{processingStatus}</span>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} id="upload-form" className="flex flex-col gap-4 mt-8 p-12 rounded-xl bg-gray-300">
               <div className="field">
