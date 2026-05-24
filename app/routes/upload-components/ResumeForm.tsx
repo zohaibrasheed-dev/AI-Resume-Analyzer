@@ -61,9 +61,6 @@ const ResumeForm = () => {
       setIsProcessing(false);
       setProcessingStatus("Something went wrong");
     }
-    finally {
-      setIsProcessing(false);
-    }
 
   }
 
