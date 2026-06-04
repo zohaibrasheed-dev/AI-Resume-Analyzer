@@ -1,7 +1,8 @@
 import { useState } from "react";
-import FileUploader from "./fileUploader";
+import FileUploader from "./FileUploader";
 import FilePreview from "./FilePreview";
 import spinner from "/images/resumeScanner.gif";
+import { convertPdfToImage } from "~/lib/pdf2Img";
 
 const ResumeForm = () => {
 
