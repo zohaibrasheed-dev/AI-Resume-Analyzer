@@ -18,7 +18,7 @@ async function loadPdfJs(): Promise<any> {
 
 export async function convertPdfToImage(file: File): Promise<{ file: File | null; imageUrl: string; error: string | null }> {
   try {
-    console.log("Starting conversion for:", file.name);
+    // console.log("Starting conversion for:", file.name);
     const pdfjs = await loadPdfJs();
     
     // File ko ArrayBuffer mein convert kiya
@@ -28,11 +28,11 @@ export async function convertPdfToImage(file: File): Promise<{ file: File | null
     const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
     
-    console.log("PDF loaded successfully. Total pages:", pdf.numPages);
+    // console.log("PDF loaded successfully. Total pages:", pdf.numPages);
 
     // Pehla page uthaya
     const page = await pdf.getPage(1);
-    console.log("Page 1 retrieved.");
+    // console.log("Page 1 retrieved.");
 
     // Canvas create kiya rendering ke liye
     const canvas = document.createElement("canvas");
@@ -53,9 +53,9 @@ export async function convertPdfToImage(file: File): Promise<{ file: File | null
       viewport: viewport,
     };
 
-    console.log("Rendering page to canvas context...");
+    // console.log("Rendering page to canvas context...");
     await page.render(renderContext).promise;
-    console.log("Render completed successfully.");
+    // console.log("Render completed successfully.");
 
     // Canvas se Blob/File banana
     return new Promise((resolve) => {
@@ -73,7 +73,7 @@ export async function convertPdfToImage(file: File): Promise<{ file: File | null
         // Local URL preview ke liye
         const imageUrl = URL.createObjectURL(convertedFile);
 
-        console.log("Image file generated successfully:", convertedFile.name);
+        // console.log("Image file generated successfully:", convertedFile.name);
         resolve({ file: convertedFile, imageUrl, error: null });
       }, "image/png");
     });

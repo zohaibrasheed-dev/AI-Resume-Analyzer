@@ -1,6 +1,6 @@
-import Header from "~/components/Header"
-import Hero from "./upload-components/Hero"
-import ResumeForm from "./upload-components/ResumeForm"
+import Header from "~/components/Header";
+import Hero from "./upload-components/Hero";
+import ResumeForm from "./upload-components/ResumeForm";
 
 const Upload = () => {
 
