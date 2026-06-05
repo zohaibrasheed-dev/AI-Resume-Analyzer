@@ -1,95 +1,85 @@
-// app/lib/pdf2Img.ts
-
-// =========================================================
-// TYPES & CACHING VARIABLES
-// =========================================================
-export interface PdfConversionResult {
-    imageUrl: string;
-    file: File | null;
-    error?: string;
-}
-
 let pdfjsLib: any = null;
 let loadPromise: Promise<any> | null = null;
 
+async function loadPdfJs(): Promise<any> {
+  if (pdfjsLib) return pdfjsLib;
+  if (loadPromise) return loadPromise;
 
-// =========================================================
-// CHUNK 1: Dynamic Engine Loader Function
-// =========================================================
-export async function loadPdfJs(): Promise<any> {
-    if (pdfjsLib) return pdfjsLib;
-    if (loadPromise) return loadPromise;
+  // @ts-ignore
+  loadPromise = import("pdfjs-dist/build/pdf.mjs").then((lib) => {
+    // Public folder path
+    lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";
+    pdfjsLib = lib;
+    return lib;
+  });
 
-    // @ts-ignore
-    loadPromise = import("pdfjs-dist/build/pdf.mjs").then((lib) => {
-        lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs";
-        pdfjsLib = lib;
-        return lib;
-    });
-
-    return loadPromise;
+  return loadPromise;
 }
 
+export async function convertPdfToImage(file: File): Promise<{ file: File | null; imageUrl: string; error: string | null }> {
+  try {
+    console.log("Starting conversion for:", file.name);
+    const pdfjs = await loadPdfJs();
+    
+    // File ko ArrayBuffer mein convert kiya
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // PDF Document load kiya
+    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    
+    console.log("PDF loaded successfully. Total pages:", pdf.numPages);
 
-// =========================================================
-// CHUNK 2 & CHUNK 3: Main Engine & Rendering Setup
-// =========================================================
-export async function convertPdfToImage(file: File): Promise<PdfConversionResult> {
-    try {
-        // --- CHUNK 2: Page Extraction Start ---
-        // 1. Library load karke active ki
-        const pdfjs = await loadPdfJs();
+    // Pehla page uthaya
+    const page = await pdf.getPage(1);
+    console.log("Page 1 retrieved.");
 
-        // 2. Original PDF file ko machine-readable raw binary data (ArrayBuffer) mein badla
-        const arrayBuffer = await file.arrayBuffer();
+    // Canvas create kiya rendering ke liye
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
 
-        // 3. Engine ko binary data feed karke document load karne ka order diya
-        const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
-        const pdfDoc = await loadingTask.promise;
+    if (!context) {
+      throw new Error("Canvas context 2D create nahi ho saka.");
+    }
 
-        // 4. PDF document ke andar se Pehla Page (Blueprint) nikaal kar hold kiya
-        const page = await pdfDoc.getPage(1);
-        // --- CHUNK 2 END ---
+    // Viewport calculate kiya
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
+    // Render configuration
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
 
-        // --- CHUNK 3: Canvas Board Paint Start ---
-        // 5. Kis scale/zoom par page render karna hai (1.5 se image clear banti hai)
-        const scale = 1.5;
-        const viewport = page.getViewport({ scale });
+    console.log("Rendering page to canvas context...");
+    await page.render(renderContext).promise;
+    console.log("Render completed successfully.");
 
-        // 6. Browser memory mein ek invisible khaali board (canvas element) banaya
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-
-        if (!context) {
-            throw new Error("Canvas context initialize nahi ho saka.");
+    // Canvas se Blob/File banana
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve({ file: null, imageUrl: "", error: "Blob creation failed" });
+          return;
         }
 
-        // 7. Board ka physical size bilkul PDF page ke blueprint ke mutabik fix kiya
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        // Asli PNG file create ki
+        const convertedFile = new File([blob], `${file.name.replace(/\.[^/.]+$/, "")}.png`, {
+          type: "image/png",
+        });
 
-        // 8. Engine ko context aur viewport de kar blueprint ko board par paint karwa diya
-        const renderContext = {
-            canvasContext: context,
-            viewport: viewport,
-        };
-        await page.render(renderContext).promise;
-        // --- CHUNK 3 END ---
+        // Local URL preview ke liye
+        const imageUrl = URL.createObjectURL(convertedFile);
 
+        console.log("Image file generated successfully:", convertedFile.name);
+        resolve({ file: convertedFile, imageUrl, error: null });
+      }, "image/png");
+    });
 
-        // Abhi ke liye temporary return (Agle chunk mein real image file banayenge)
-        return {
-            imageUrl: "",
-            file: null
-        };
-
-    } catch (err: any) {
-        console.error("Conversion error:", err);
-        return {
-            imageUrl: "",
-            file: null,
-            error: err.message || "PDF parse ya render karne mein masla hua."
-        };
-    }
+  } catch (err: any) {
+    console.error("Error inside convertPdfToImage engine:", err);
+    return { file: null, imageUrl: "", error: err.message || "Internal conversion error" };
+  }
 }

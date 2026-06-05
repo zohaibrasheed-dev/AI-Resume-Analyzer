@@ -1,18 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // 🔥 React Router 7 Navigation Hook
 import FileUploader from "./FileUploader";
 import FilePreview from "./FilePreview";
 import spinner from "/images/resumeScanner.gif";
 import { convertPdfToImage } from "~/lib/pdf2Img";
 
 const ResumeForm = () => {
+  const navigate = useNavigate(); // 🔥 Router trigger instance
 
-  const [file, setFile] = useState<File | null>(null);
+  // Form States
+  const [file, setFile] = useState<File | null>(null); 
   const [errorMessage, setErrorMessage] = useState<string>('');
-
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>('');
-  const [isCompleted, setisCompleted] = useState<boolean>(false);
 
+  // Receive Uploaded File From Child Component
   const fileReceived = (selectedFile: File) => {
     setFile(selectedFile);
     setErrorMessage('');
@@ -22,47 +24,75 @@ const ResumeForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Check if Puter Is Installed!
     const puter = (window as any).puter;
     if (!puter) {
       console.error("Puter Not Found!");
       return;
     }
 
-    // Check If File Is Uploaded
     if (!file) {
       setErrorMessage("Please upload your resume file");
       return;
     }
 
-    // Extracting Data From All Input Fields
+    // Extracting Input Fields Data
     const formData = new FormData(e.currentTarget);
     const companyName = formData.get("company-name") as string;
     const jobTitle = formData.get("job-title") as string;
     const jobDescription = formData.get("job-description") as string;
-    const resumeFile = file as File;
 
     try {
-      // As Soon as we try, let's tell the user that we are uploading the data
-      setProcessingStatus("Uploading Your Data To Cloud...");
       setIsProcessing(true);
       
-      // Waiting For Response To Success
-      const puterCloudData = await puter.fs.upload(file);
-      
-      // If Response Is Success
-      if (puterCloudData) {
-        setIsProcessing(false);
-        setisCompleted(true);
-        setProcessingStatus("Successfully Uploaded!");
+      let fileToUpload: File = file;
+      let previewUrlString = "";
+
+      // CHUNK A: PDF to Image conversion
+      if (file.type === "application/pdf") {
+        setProcessingStatus("Rendering PDF to Crisp Image...");
+        const conversionResult = await convertPdfToImage(file);
+        
+        if (conversionResult.error || !conversionResult.file) {
+          throw new Error(conversionResult.error || "PDF conversion failed.");
+        }
+        
+        fileToUpload = conversionResult.file;
+        previewUrlString = conversionResult.imageUrl;
+      } else {
+        previewUrlString = URL.createObjectURL(file);
       }
 
-    } 
-    catch (error) {
-      setIsProcessing(false);
-      setProcessingStatus("Something went wrong");
-    }
+      // CHUNK B: Puter Cloud Upload
+      setProcessingStatus("Uploading Resume To Cloud...");
+      const puterCloudData = await puter.fs.upload(fileToUpload);
+      
+      if (!puterCloudData) {
+        throw new Error("Puter cloud upload failed.");
+      }
 
+      // 🔥 INSTRUCTOR'S MASTERSTROKE: Cloud hosted read URL pick kiya
+      const cloudImageUrl = puterCloudData.read_url;
+
+      setProcessingStatus("Redirecting to analysis dashboard...");
+      await new Promise((res) => setTimeout(res, 500)); 
+
+      setIsProcessing(false);
+
+      // 🔥 STEP 2 REDIRECT: React Router 7 ke mutabik query strings ke sath push kiya
+      const queryParams = new URLSearchParams({
+        imageUrl: cloudImageUrl,
+        company: companyName,
+        title: jobTitle,
+        desc: jobDescription
+      });
+
+      navigate(`/results?${queryParams.toString()}`);
+
+    } 
+    catch (error: any) {
+      setIsProcessing(false);
+      setErrorMessage(error.message || "Something went wrong");
+    }
   }
 
   return (
@@ -70,27 +100,23 @@ const ResumeForm = () => {
       <div className="uploader-form mt-20">
         {
           isProcessing ? (
-            <div className="loader-wrapper">
-              <span className="text-2xl text-gray-700 blink">{processingStatus}</span>
-              <img src={spinner} alt="spinner-gif" />
-            </div>
-          ) : isCompleted ? (
-            <div className="loader-wrapper">
-              <span className="text-2xl text-gray-700 blink">{processingStatus}</span>
+            <div className="loader-wrapper flex flex-col items-center justify-center min-h-[40vh]">
+              <span className="text-2xl text-gray-700 blink mb-4">{processingStatus}</span>
+              <img src={spinner} alt="spinner-gif" className="w-24 h-24 object-contain" />
             </div>
           ) : (
             <form onSubmit={handleSubmit} id="upload-form" className="flex flex-col gap-4 mt-8 p-12 rounded-xl bg-gray-300">
               <div className="field">
                 <label htmlFor="company-name">Company Name</label>
-                <input type="text" name="company-name" placeholder="Company Name" id="company-name" />
+                <input type="text" name="company-name" placeholder="Company Name" id="company-name" required />
               </div>
               <div className="field">
                 <label htmlFor="job-title">Job Title</label>
-                <input type="text" name="job-title" placeholder="Job Title" id="job-title" />
+                <input type="text" name="job-title" placeholder="Job Title" id="job-title" required />
               </div>
               <div className="field">
                 <label htmlFor="job-description">Job Description</label>
-                <textarea rows={5} name="job-description" placeholder="Job Description" id="job-description" />
+                <textarea rows={5} name="job-description" placeholder="Job Description" id="job-description" required />
               </div>
               <div className="field">
                 <label>Upload Resume</label>
@@ -120,4 +146,4 @@ const ResumeForm = () => {
   )
 }
 
-export default ResumeForm
+export default ResumeForm;
