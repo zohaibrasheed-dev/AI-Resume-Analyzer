@@ -62,14 +62,11 @@ const Feedback = () => {
 
                 // Race between analysis and timeout
                 const response: any = await Promise.race([analysisTask, timeoutTask]);
-                console.log("FULL RESPONSE:", JSON.stringify(response, null, 2));
 
                 // Extract and Clean Content
                 const rawContent = typeof response === 'string'
                     ? response
                     : (response.message?.content ?? "");
-
-                console.log("RAW AI RESPONSE:", rawContent); // 👈 Add this temporarily to debug
 
                 // Extract JSON — find the first { and last } to isolate the object
                 const jsonStart = rawContent.indexOf('{');
