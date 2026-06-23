@@ -43,7 +43,7 @@ export async function convertPdfToImage(file: File): Promise<{ file: File | null
     }
 
     // Viewport calculate kiya
-    const viewport = page.getViewport({ scale: 1.5 });
+    const viewport = page.getViewport({ scale: 3.0 });
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 

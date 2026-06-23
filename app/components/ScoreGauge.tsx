@@ -14,7 +14,7 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-[100px] h-[100px]">
+      <div className="relative h-[50px] w-[75px] md:w-[100px] md:h-[100px] max-w-xl">
         <svg viewBox="0 0 100 50" className="w-full h-full">
           <defs>
             <linearGradient

@@ -28,13 +28,12 @@ const FileUploader = ({ fileReceiveFnc }: ParentPropsFnc) => {
     return (
         <div className="relative w-full">
             <div className="inset-shadow w-full p-3 rounded-3xl" onClick={showUploader}>
-                <div className="custom-uploader flex flex-col items-center w-full bg-white p-12 rounded-2xl cursor-pointer">
+                <div className="custom-uploader flex flex-col items-center w-full bg-white p-4 md:p-12 rounded-2xl cursor-pointer">
                     <img src={infoIcon} alt="info-icon" className="w-[60px]" />
                     <h4 className="text-base font-inter mt-5 mb-2">
                         <span className="font-semibold">Click to upload</span>
-                        <span className="text-gray-700"> or drag and drop</span>
                     </h4>
-                    <span className="text-gray-500 text-sm">PDF, PNG or JPG (max. 10MB)</span>
+                    <span className="text-gray-500 text-sm">PDF (max. 10MB)</span>
                 </div>
             </div>
             <input type="file" onChange={fileUpload} accept=".pdf" name="resume-file" className="sr-only" ref={inputFileRef} id="file-input" />

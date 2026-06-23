@@ -73,10 +73,7 @@ const ResumeForm = () => {
       if (!originalUpload) throw new Error("Original resume upload failed.");
 
       setProcessingStatus("Preparing Dashboard.... redirecting");
-      const imageFieUpload = await puter.fs.upload(imageFile);
-      const imageFileData = await puter.fs.read(imageFieUpload.path);
-      const blob = new Blob([imageFileData], { type: "image/png" });
-      setImageBlob(blob);
+      setImageBlob(imageFile);
 
       navigate('/feedback');
 
@@ -101,7 +98,7 @@ const ResumeForm = () => {
               <img src={spinner} alt="loader-img" className="w-100 h-100 object-contain" />
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-8 p-12 rounded-xl bg-gray-300">
+            <form onSubmit={handleSubmit} className="flex flex-col mt-8 p-4 md:p-12 rounded-xl bg-gray-300">
               <div className="field">
                 <label htmlFor="company-name">Company Name</label>
                 <input type="text" name="company-name" placeholder="Company Name" id="company-name" required />

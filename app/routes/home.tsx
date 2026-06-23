@@ -4,6 +4,7 @@ import Header from "~/components/Header";
 import ResumesArea from "~/components/ResumesArea";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { useResumeStore } from "~/store/resumeStore";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -13,6 +14,8 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
+
+  const { resetResume } = useResumeStore();
 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -31,6 +34,30 @@ export default function Home() {
 
     }
   }, [])
+
+
+  // Logout User
+  const handleLogout = async () => {
+    // 1. App ki state clear karo
+    resetResume();
+    
+    // 2. Puter session clear karo (Yeh crucial hai)
+    try {
+        const puter = (window as any).puter;
+        if (puter) {
+            await puter.auth.signOut(); // Agar puter.js mein signOut available hai
+        }
+    } catch (e) {
+        console.log("Puter session already closed");
+    }
+
+    // 3. Browser ki saari local storage/cookies saaf karo
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 4. Page ko force refresh karo taake naya session load ho
+    window.location.reload();
+};
 
 
   return (
